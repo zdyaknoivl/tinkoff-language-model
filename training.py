@@ -17,7 +17,7 @@ class TrainModel():
     
 
     def _fill_input(self,input_dir) -> str:
-        '''fills data with file content or user's stdin'''
+        '''загружает данные из файла либо из stdin'''
         if input_dir == None:
             pass
         else:
@@ -29,7 +29,7 @@ class TrainModel():
 
 
     def _read_files_in_dir(self, input_dir) -> str:
-        '''reads files in specified dir'''
+        '''читает файлы'''
         starred_path = os.path.join(input_dir,'**')
         file_list = glob(starred_path,recursive=True)
         output_file_list = []
@@ -39,13 +39,13 @@ class TrainModel():
         return output_file_list
 
     def _generate_filenames(self,input_dir):
-        '''reads all files from folder recursively'''
+        '''читает файлы рекурсивно'''
         for folder_path, folder_names, file_names in os.walk(input_dir):
             for file_name in file_names:
                 yield open(os.path.join(folder_path, file_name), encoding = self.encoding)
 
     def _get_file_rows(self,files)->str:
-        '''lazy method to read file line by line and get normalized row'''
+        '''читает файлы "ленивым" методом (строчка за строчкой) и добавляет разделители'''
         for fileobject in files:
             
             line = fileobject.readline()
@@ -59,13 +59,14 @@ class TrainModel():
             yield self.fileseparator
 
     def _tokenize(self,lines)->str:
-        '''splits lines to words'''
+        '''токенизирует строчки в слова'''
         for line in lines:
             for word in line.split(' '):
                 yield word.strip()
     
 
     def _generate_key_value(self,words):
+        '''формирует "контейнеры", учитывая разделители'''
         n = self.n
         i = 0
         container = []
@@ -84,6 +85,7 @@ class TrainModel():
                     container = container[1:] + [word]
 
     def _lazy_reader(self, filepath = None):
+        '''формирует словарь с n-граммами и словарь со всем текстом'''
         tokenized_words = []
         n = self.n
         tokenized_content = {}
@@ -109,6 +111,7 @@ class TrainModel():
 
 
     def _fit(self,model,input_dir = None):
+        ''' "обучает" модель и сохраняет ее в указанную папку'''
         tokenized_content = self._lazy_reader(input_dir)
         with open(model,'wb') as pkl_file:
             pickle.dump(
@@ -123,11 +126,13 @@ class TrainModel():
         self._fit(input_dir, model)
 
     def _load_pickle(self, model):
+        '''загружает "обученную" модель'''
         with open(model,'rb') as pkl_file:
             tokenized_content = pickle.load(pkl_file)
         return tokenized_content
     
     def generator(self, length, start_sequence, model) -> str:
+        '''генерирует последовательность заданной длины'''
         tokenized_dict = self._load_pickle(model)
         tokenized_words = tokenized_dict['tokenized_words']
         tokenized_content = tokenized_dict['tokenized_content']
@@ -151,6 +156,7 @@ class TrainModel():
         return output_str
 
     def _lazy_words_from_input(self):
+        '''отвечает за ввод текста с консоли'''
         print("Введите текст для обучения. Чтобы сохранить строку нажмите Enter после ввода. Для выхода из режима нажмите Enter повторно и подтвердите выход")
         while True:
             
@@ -168,6 +174,7 @@ class TrainModel():
     
 
 if __name__ == '__main__':
+    '''консоль'''
     parser = argparse.ArgumentParser(description='training model')
     parser.add_argument('--input-dir',type=str)
     parser.add_argument('--model',type=str)
@@ -182,6 +189,6 @@ if __name__ == '__main__':
 
 
 
-## закомментить код
+
 
         
